@@ -1,4 +1,4 @@
-//
+//@
 //  AppDelegate.m
 //  test2
 //
@@ -14,7 +14,20 @@
 
 @implementation AppDelegate
 
+@synthesize worker = _worker;
+@synthesize uiThread  = _uiThread;
 
+- (NSOperationQueue*) worker {
+    @synchronized(self){
+        if (_worker == nil) {
+            _worker = [[NSOperationQueue alloc] init];
+        }
+        return _worker;
+    }
+}
+- (NSOperationQueue*) uiThread {
+    return [NSOperationQueue mainQueue];
+}
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     return YES;

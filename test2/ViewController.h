@@ -10,7 +10,7 @@
 #import <CoreData/CoreData.h>
 
 @interface ViewController : UITableViewController <NSFetchedResultsControllerDelegate>
-
+    
 @property (strong, nonatomic) NSFetchedResultsController *fetchedResultsController;
 @end
 

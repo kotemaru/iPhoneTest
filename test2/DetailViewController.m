@@ -12,7 +12,7 @@
 @interface DetailViewController ()
 @property (weak, nonatomic) IBOutlet UITextField *vCompany;
 @property (weak, nonatomic) IBOutlet UITextField *vName;
-
+@property (strong, nonatomic) UIActivityIndicatorView *vProgress;
 @end
 
 @implementation DetailViewController
@@ -27,6 +27,20 @@
                                 target:self
                                 action:@selector(done)];
     self.navigationItem.rightBarButtonItem = doneBtn;
+    
+    if (self.vProgress == nil) {
+        self.vProgress = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+        self.vProgress.hidesWhenStopped = YES;
+        CGSize indicatorSize = self.vProgress.frame.size;
+        CGSize viewSize = self.view.frame.size;
+        self.vProgress.frame = CGRectMake(
+                                          (viewSize.width-indicatorSize.width) / 2,
+                                          (viewSize.height-indicatorSize.height) / 2,
+                                          indicatorSize.width,
+                                          indicatorSize.height);
+        [self.vProgress stopAnimating];
+        [self.view addSubview:self.vProgress];
+    }
     
     [self restoreEntity];
 }
@@ -50,23 +64,33 @@
 
 - (void)done
 {
-    AppDelegate *app = (AppDelegate *) [[UIApplication sharedApplication] delegate];
-    if (self.entity == nil ) {
-        self.entity = [NSEntityDescription
-                       insertNewObjectForEntityForName:NSStringFromClass([TestEntity class])
-                       inManagedObjectContext:app.managedObjectContext];
-    }
-    self.entity.company = self.vCompany.text;
-    self.entity.name = self.vName.text;
+    [self.vProgress startAnimating];
     
-    NSError *error = nil;
-    if (![app.managedObjectContext save:&error]) {
-        NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
-        abort();
-    }
-    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone) {
-        [self.navigationController popViewControllerAnimated:YES];
-    }
+    
+    __block AppDelegate *app = (AppDelegate *) [[UIApplication sharedApplication] delegate];
+    [app.worker addOperationWithBlock: ^{
+        if (self.entity == nil ) {
+            self.entity = [NSEntityDescription
+                           insertNewObjectForEntityForName:NSStringFromClass([TestEntity class])
+                           inManagedObjectContext:app.managedObjectContext];
+        }
+        self.entity.company = self.vCompany.text;
+        [NSThread sleepForTimeInterval:5];
+        self.entity.name = self.vName.text;
+        
+        NSError *error = nil;
+        if (![app.managedObjectContext save:&error]) {
+            NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
+            abort();
+        }
+        
+        [app.uiThread addOperationWithBlock: ^{
+            [self.vProgress stopAnimating];
+            if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone) {
+                [self.navigationController popViewControllerAnimated:YES];
+            }
+        }];
+    }];
 }
 
 /*

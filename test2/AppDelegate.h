@@ -20,5 +20,7 @@
 - (void)saveContext;
 - (NSURL *)applicationDocumentsDirectory;
 
+@property (readonly, strong, nonatomic) NSOperationQueue *worker;
+@property (readonly, strong, nonatomic) NSOperationQueue *uiThread;
 
 @end
